@@ -10,6 +10,7 @@ import OrderHistory from "./pages/OrderHistory";
 import CustomerManagement from "./pages/CustomerManagement";
 import AllOrders from "./pages/AllOrders";
 import ProductDetail from "./pages/ProductDetail";
+import Statistics from "./pages/Statistics";
 import { useAuth } from "./context/AuthContext";
 import { useCart } from "./context/CartContext";
 
@@ -70,6 +71,11 @@ export default function App() {
 												Customers
 											</Link>
 										</li>
+										<li>
+											<Link to="/admin/statistics" className={location.pathname === "/admin/statistics" ? "active" : ""}>
+												📊 Statistics
+											</Link>
+										</li>
 									</>
 								)}
 							</ul>
@@ -113,6 +119,7 @@ export default function App() {
 					<Route path="/admin/products" element={<AdminProducts />} />
 					<Route path="/admin/orders" element={<AllOrders />} />
 					<Route path="/admin/customers" element={<CustomerManagement />} />
+					<Route path="/admin/statistics" element={<Statistics />} />
 				</Routes>
 			</main>
 		</div>

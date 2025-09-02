@@ -1,0 +1,246 @@
+# GitLab CI/CD Pipeline for Webshop Application
+# Based on GitHub Actions workflow
+
+stages:
+  - test
+  - security
+  - build
+  - deploy
+
+variables:
+  REGISTRY: "registry.gitlab.com"
+  IMAGE_NAME: "$CI_PROJECT_PATH"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+
+# Cache dependencies between jobs
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - frontend/node_modules/
+    - .cache/pip/
+
+# Test Backend
+test-backend:
+  stage: test
+  image: python:3.11-slim
+  services:
+    - docker:dind
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov pytest-asyncio httpx
+  script:
+    - pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - coverage.xml
+      - htmlcov/
+    expire_in: 1 week
+  only:
+    - main
+    - dev
+    - merge_requests
+
+# Test Frontend
+test-frontend:
+  stage: test
+  image: node:18-alpine
+  before_script:
+    - cd frontend
+    - npm ci
+  script:
+    - npm test -- --coverage
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+    paths:
+      - frontend/coverage/
+    expire_in: 1 week
+  only:
+    - main
+    - dev
+    - merge_requests
+
+# Security Scanning
+security-scan:
+  stage: security
+  image: aquasec/trivy:latest
+  services:
+    - docker:dind
+  before_script:
+    - trivy --version
+  script:
+    - trivy fs --format sarif --output trivy-results.sarif .
+  artifacts:
+    reports:
+      sast: trivy-results.sarif
+    paths:
+      - trivy-results.sarif
+    expire_in: 1 week
+  only:
+    - main
+    - dev
+    - merge_requests
+
+# Build and Push Docker Images
+build-and-push:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    # Build and push backend image
+    - docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA .
+    - docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG .
+    - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG
+    
+    # Build and push frontend image
+    - docker build -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA ./frontend
+    - docker build -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG ./frontend
+    - docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG
+    
+    # Tag with latest for main branch
+    - |
+      if [ "$CI_COMMIT_REF_NAME" = "main" ]; then
+        docker tag $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/backend:latest
+        docker tag $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE/frontend:latest
+        docker push $CI_REGISTRY_IMAGE/backend:latest
+        docker push $CI_REGISTRY_IMAGE/frontend:latest
+      fi
+  dependencies:
+    - test-backend
+    - test-frontend
+    - security-scan
+  only:
+    - main
+    - dev
+  when: manual
+
+# Deploy to Staging
+deploy-staging:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to staging environment..."
+    - echo "Branch: $CI_COMMIT_REF_NAME"
+    - echo "Commit: $CI_COMMIT_SHORT_SHA"
+    # Add your staging deployment commands here
+    # Example: kubectl apply -f k8s/staging/
+    # Example: docker-compose -f docker-compose.staging.yml up -d
+  environment:
+    name: staging
+    url: https://staging.yourdomain.com
+  only:
+    - dev
+  when: manual
+  dependencies:
+    - build-and-push
+
+# Deploy to Production
+deploy-production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deploying to production environment..."
+    - echo "Branch: $CI_COMMIT_REF_NAME"
+    - echo "Commit: $CI_COMMIT_SHORT_SHA"
+    # Add your production deployment commands here
+    # Example: kubectl apply -f k8s/production/
+    # Example: docker-compose -f docker-compose.prod.yml up -d
+  environment:
+    name: production
+    url: https://yourdomain.com
+  only:
+    - main
+  when: manual
+  dependencies:
+    - build-and-push
+
+# Notify Deployment Status
+notify-deployment:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Deployment notification step"
+    - echo "Staging deployment status: $STAGING_DEPLOY_STATUS"
+    - echo "Production deployment status: $PRODUCTION_DEPLOY_STATUS"
+    # Add your notification logic here
+    # Example: Slack, Discord, or email notifications
+  dependencies:
+    - deploy-staging
+    - deploy-production
+  only:
+    - main
+    - dev
+  when: manual
+
+# Code Quality Analysis
+code-quality:
+  stage: test
+  image: registry.gitlab.com/gitlab-org/ci-cd/codequality:latest
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    paths:
+      - gl-code-quality-report.json
+    expire_in: 1 week
+  only:
+    - main
+    - dev
+    - merge_requests
+
+# Dependency Scanning
+dependency-scanning:
+  stage: security
+  image: registry.gitlab.com/gitlab-org/security-products/dependency-scanning:latest
+  artifacts:
+    reports:
+      dependency_scanning: gl-dependency-scanning-report.json
+    paths:
+      - gl-dependency-scanning-report.json
+    expire_in: 1 week
+  only:
+    - main
+    - dev
+    - merge_requests
+
+# Container Scanning
+container-scanning:
+  stage: security
+  image: registry.gitlab.com/gitlab-org/security-products/container-scanning:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_IMAGE: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+    DOCKER_USER: $CI_REGISTRY_USER
+    DOCKER_PASSWORD: $CI_REGISTRY_PASSWORD
+  artifacts:
+    reports:
+      container_scanning: gl-container-scanning-report.json
+    paths:
+      - gl-container-scanning-report.json
+    expire_in: 1 week
+  only:
+    - main
+    - dev
+    - merge_requests
+  dependencies:
+    - build-and-push

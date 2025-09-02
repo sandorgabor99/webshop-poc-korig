@@ -6,8 +6,9 @@ from .database import Base, engine, get_db
 from .config import settings
 from .security import hash_password
 from .models import User, UserRole
-from .routers import auth, products, orders, upload, customers, reviews
+from .routers import auth, products, orders, upload, customers, reviews, analytics
 from .logging_config import setup_logging, get_auth_logger
+from .kafka_config import kafka_producer
 import os
 
 auth_logger = get_auth_logger()
@@ -44,10 +45,23 @@ async def lifespan(app: FastAPI):
         auth_logger.warning("ADMIN_EMAIL or ADMIN_PASSWORD not set. Admin user not seeded.")
     db.close()
     
+    # Initialize Kafka if enabled
+    if settings.kafka_enabled:
+        try:
+            await kafka_producer.connect()
+            auth_logger.info("Kafka producer initialized successfully")
+        except Exception as e:
+            auth_logger.error(f"Failed to initialize Kafka producer: {e}")
+    
     yield
     
     # Shutdown
-    pass
+    if settings.kafka_enabled:
+        try:
+            await kafka_producer.disconnect()
+            auth_logger.info("Kafka producer disconnected")
+        except Exception as e:
+            auth_logger.error(f"Error disconnecting Kafka producer: {e}")
 
 
 app = FastAPI(title="Webshop API", lifespan=lifespan)
@@ -80,6 +94,7 @@ app.include_router(orders.router, prefix="/orders", tags=["Orders"])
 app.include_router(upload.router, prefix="/upload", tags=["Upload"])
 app.include_router(customers.router, prefix="/customers", tags=["Customers"])
 app.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
+app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 
 
 @app.get("/")

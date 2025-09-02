@@ -1,6 +1,6 @@
 # WebShop POC
 
-A full-stack e-commerce proof of concept with FastAPI backend and React frontend.
+A full-stack e-commerce proof of concept with FastAPI backend and React frontend, featuring real-time analytics and Kafka integration.
 
 ## 🏗️ Project Structure
 
@@ -11,6 +11,7 @@ webshop-poc/
 │   ├── models.py          # Database models
 │   ├── schemas.py         # Pydantic schemas
 │   ├── security.py        # Authentication & authorization
+│   ├── kafka_config.py    # Kafka producer configuration
 │   └── main.py           # Application entry point
 ├── frontend/              # React frontend application
 │   ├── src/
@@ -27,6 +28,7 @@ webshop-poc/
 ├── docs/                  # Documentation
 ├── tests/                 # Pytest test suite
 ├── uploads/               # File upload storage
+├── docker-compose.kafka.yml # Kafka services configuration
 └── webshop.db            # SQLite database
 ```
 
@@ -45,7 +47,12 @@ webshop-poc/
    # Edit .env with your configuration
    ```
 
-3. **Run the server:**
+3. **Start Kafka services (optional but recommended):**
+   ```bash
+   docker-compose -f docker-compose.kafka.yml up -d
+   ```
+
+4. **Run the server:**
    ```bash
    python -m uvicorn app.main:app --reload
    ```
@@ -72,6 +79,23 @@ webshop-poc/
 - **Review System**: Product reviews with star ratings
 - **Admin Panel**: Customer management, order overview
 - **Image Upload**: Product image management with file storage
+- **🆕 Kafka Integration**: Real-time analytics event streaming
+- **🆕 Analytics Dashboard**: Comprehensive admin statistics panel with charts
+- **🆕 Event Tracking**: Product, order, and user activity monitoring
+
+## 🔥 New Features
+
+### Kafka Integration
+- **Real-time Event Streaming**: Track user actions, product views, and order activities
+- **Analytics Events**: Product views, orders, user registrations, admin actions
+- **Scalable Architecture**: Event-driven design for future analytics expansion
+
+### Analytics Dashboard
+- **📊 Overview**: Total revenue, orders, users, and products with trend charts
+- **🛒 Orders Analytics**: Order statistics, today's metrics, top-selling products
+- **👥 User Analytics**: User growth, active users, role-based counts
+- **🛍️ Product Analytics**: Performance metrics, revenue per product, ratings
+- **📈 Interactive Charts**: Revenue trends, order patterns, user growth visualization
 
 ## 🛠️ Scripts
 
@@ -98,48 +122,80 @@ webshop-poc/
 - `scripts/tests/test_new_endpoints.py` - Endpoint functionality tests
 - `scripts/tests/test_order_history_features.py` - Order history tests
 
-### Database Fixes
-
-- `scripts/fixes/fix_admin_username.py` - Fix admin username issues
-- `scripts/fixes/fix_database.py` - General database fixes
-- `scripts/fixes/fix_product_images.py` - Fix product image URLs
-- `scripts/fixes/improve_product_images.py` - Enhance product images
-- `scripts/fixes/quick_fix.py` - Quick database fixes
-
 ## 📚 Documentation
 
-- `docs/AUTHENTICATION_ROLES_SUMMARY.md` - Authentication system overview
+- `docs/AUTHENTICATION_ROLES_SUMMARY.md` - Authentication and authorization guide
 - `docs/IMAGE_UPLOAD_FEATURE.md` - Image upload functionality
 - `docs/ORDER_HISTORY_AND_CUSTOMER_MANAGEMENT.md` - Order and customer management
-- `docs/PRODUCT_IMAGES_SUMMARY.md` - Product image system
+- `docs/PRODUCT_IMAGES_SUMMARY.md` - Product image system overview
 - `docs/REVIEW_SYSTEM.md` - Review and rating system
+- `docs/KAFKA_INTEGRATION.md` - **🆕 Kafka integration and analytics guide**
 
-## 🧪 Testing
+## 🐳 Docker Support
 
-Run the test suite:
+### Kafka Services
 ```bash
-pytest
+# Start Kafka, Zookeeper, and Kafka UI
+docker-compose -f docker-compose.kafka.yml up -d
+
+# Access Kafka UI at http://localhost:8080
+# Kafka broker available at localhost:9092
 ```
 
-## 🔧 Development
+### Main Application
+```bash
+# Start the full application stack
+docker-compose up -d
+```
 
-### Database
-
-The application uses SQLite for simplicity. The database file is `webshop.db`.
-
-### API Documentation
-
-Once the server is running, visit:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+## 🔧 Configuration
 
 ### Environment Variables
+```bash
+# Kafka Configuration
+KAFKA_ENABLED=true
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+KAFKA_ANALYTICS_TOPIC=webshop-analytics
 
-Copy `env.example` to `.env` and configure:
-- `SECRET_KEY`: JWT secret key
-- `ALGORITHM`: JWT algorithm (default: HS256)
-- `ACCESS_TOKEN_EXPIRE_MINUTES`: Token expiration time
+# Admin Configuration
+ADMIN_EMAIL=admin@webshop.com
+ADMIN_PASSWORD=admin123
 
-## 📝 License
+# Security
+SECRET_KEY=your-secret-key-here
+```
 
-This is a proof of concept project for educational purposes.
+## 📊 Analytics API Endpoints
+
+| Endpoint | Method | Description | Auth Required |
+|----------|--------|-------------|---------------|
+| `/analytics/dashboard` | GET | Complete dashboard metrics | Admin |
+| `/analytics/overview` | GET | System overview statistics | Admin |
+| `/analytics/orders` | GET | Order analytics | Admin |
+| `/analytics/users` | GET | User analytics | Admin |
+| `/analytics/products` | GET | Product analytics | Admin |
+
+## 🚀 Getting Started with Analytics
+
+1. **Access the Dashboard**: Navigate to `/admin/statistics` as an admin user
+2. **View Metrics**: Explore different tabs for comprehensive insights
+3. **Monitor Events**: Check Kafka UI for real-time event streaming
+4. **Customize**: Modify analytics calculations in `app/routers/analytics.py`
+
+## 🔍 Monitoring & Debugging
+
+- **Kafka UI**: http://localhost:8080 (when running Kafka services)
+- **Backend Health**: `GET /health`
+- **Analytics Health**: `GET /analytics/dashboard` (admin only)
+- **Event Logs**: Check backend logs for Kafka events
+
+## 🎯 Future Enhancements
+
+- Real-time dashboard updates via WebSocket
+- Advanced charting with Chart.js or D3.js
+- Export analytics data to CSV/Excel
+- Email reports and alerts
+- Custom date range filtering
+- Predictive analytics
+- Redis caching for performance
+- Multiple Kafka consumers for scalability

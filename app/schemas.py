@@ -144,3 +144,61 @@ class CustomerOrderSummary(BaseModel):
     total_spent: float
     average_order_value: float
     last_order_date: Optional[datetime]
+
+# Analytics and Statistics Schemas
+class AnalyticsEvent(BaseModel):
+    event_type: str
+    timestamp: datetime
+    user_id: Optional[int] = None
+    data: dict
+
+class ProductAnalytics(BaseModel):
+    product_id: int
+    product_name: str
+    views: int = 0
+    orders: int = 0
+    revenue: float = 0.0
+    average_rating: float = 0.0
+    review_count: int = 0
+    stock_level: int = 0
+    profit_margin: float = 0.0
+
+class OrderAnalytics(BaseModel):
+    total_orders: int
+    total_revenue: float
+    average_order_value: float
+    orders_today: int
+    revenue_today: float
+    top_products: List[ProductAnalytics]
+    sales_by_category: List[dict]
+    monthly_sales: List[dict]
+
+class UserAnalytics(BaseModel):
+    total_users: int
+    new_users_today: int
+    active_users: int
+    admin_users: int
+    customer_users: int
+    user_engagement: float = 0.0
+
+class SystemStatistics(BaseModel):
+    total_products: int
+    total_orders: int
+    total_users: int
+    total_revenue: float
+    average_product_rating: float
+    top_selling_products: List[ProductAnalytics]
+    recent_orders: List[dict]
+    user_growth: dict
+    sales_metrics: dict
+    rating_metrics: dict
+
+class DashboardMetrics(BaseModel):
+    overview: SystemStatistics
+    orders: OrderAnalytics
+    users: UserAnalytics
+    products: List[ProductAnalytics]
+    revenue_chart: List[dict]
+    orders_chart: List[dict]
+    sales_analytics: dict
+    rating_analytics: dict
