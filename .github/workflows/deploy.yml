@@ -1,15 +1,39 @@
 name: Deploy Application
 
 on:
+  # Primary trigger: when CI/CD workflow completes
   workflow_run:
     workflows: ["CI/CD Pipeline"]
     types:
       - completed
     branches: [main, dev]
+  
+  # Alternative trigger: direct push to branches
+  push:
+    branches: [main, dev]
 
 jobs:
+  debug-context:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Debug workflow context
+      run: |
+        echo "=== Workflow Debug Information ==="
+        echo "Event name: ${{ github.event_name }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "SHA: ${{ github.sha }}"
+        echo "Actor: ${{ github.actor }}"
+        echo "Repository: ${{ github.repository }}"
+        if [ "${{ github.event_name }}" = "workflow_run" ]; then
+          echo "Workflow run ID: ${{ github.event.workflow_run.id }}"
+          echo "Workflow run conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Workflow run head branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Workflow run status: ${{ github.event.workflow_run.status }}"
+        fi
+
   deploy-staging:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev' }}
+    if: ${{ (github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'dev' || github.ref == 'refs/heads/dev')) || (github.event_name == 'push' && github.ref == 'refs/heads/dev') }}
     runs-on: ubuntu-latest
     environment: staging
     
@@ -20,12 +44,15 @@ jobs:
     - name: Deploy to staging
       run: |
         echo "Deploying to staging environment..."
+        echo "Event type: ${{ github.event_name }}"
+        echo "Workflow run branch: ${{ github.event.workflow_run.head_branch || 'N/A' }}"
+        echo "Current ref: ${{ github.ref }}"
         # Add your staging deployment commands here
         # Example: kubectl apply -f k8s/staging/
         # Example: docker-compose -f docker-compose.staging.yml up -d
 
   deploy-production:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    if: ${{ (github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'main' || github.ref == 'refs/heads/main')) || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     environment: production
     
@@ -36,6 +63,9 @@ jobs:
     - name: Deploy to production
       run: |
         echo "Deploying to production environment..."
+        echo "Event type: ${{ github.event_name }}"
+        echo "Workflow run branch: ${{ github.event.workflow_run.head_branch || 'N/A' }}"
+        echo "Current ref: ${{ github.ref }}"
         # Add your production deployment commands here
         # Example: kubectl apply -f k8s/production/
         # Example: docker-compose -f docker-compose.prod.yml up -d
@@ -49,5 +79,8 @@ jobs:
     - name: Notify deployment status
       run: |
         echo "Deployment notification step"
+        echo "Event type: ${{ github.event_name }}"
+        echo "Staging deployment status: ${{ needs.deploy-staging.result }}"
+        echo "Production deployment status: ${{ needs.deploy-production.result }}"
         # Add your notification logic here
         # Example: Slack, Discord, or email notifications
