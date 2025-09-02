@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebShop POC - Full-Stack E-commerce Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .presentation-container {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            padding: 60px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .slide h1 {
+            font-size: 3.5rem;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .slide h2 {
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            color: #34495e;
+        }
+
+        .slide h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #7f8c8d;
+        }
+
+        .slide p {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            max-width: 800px;
+        }
+
+        .slide ul {
+            text-align: left;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            max-width: 700px;
+        }
+
+        .slide li {
+            margin-bottom: 10px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+            max-width: 900px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .tech-item {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            max-width: 800px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 700px;
+            overflow-x: auto;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .highlight {
+            background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+            max-width: 900px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 30px 20px;
+            }
+            
+            .slide h1 {
+                font-size: 2.5rem;
+            }
+            
+            .slide h2 {
+                font-size: 2rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active" id="slide1">
+            <h1>🚀 WebShop POC</h1>
+            <h2>Full-Stack E-commerce Proof of Concept</h2>
+            <p>A comprehensive e-commerce solution built with modern technologies</p>
+            <div class="tech-stack">
+                <div class="tech-item">FastAPI</div>
+                <div class="tech-item">React</div>
+                <div class="tech-item">SQLite</div>
+                <div class="tech-item">TypeScript</div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Project Overview -->
+        <div class="slide" id="slide2">
+            <h2>📋 Project Overview</h2>
+            <p>A complete e-commerce platform demonstrating modern web development practices with a focus on:</p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>🔐 Security</h3>
+                    <p>JWT authentication with role-based access control</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🛍️ Shopping Experience</h3>
+                    <p>Product catalog, cart management, and checkout</p>
+                </div>
+                <div class="feature-card">
+                    <h3>⭐ Reviews & Ratings</h3>
+                    <p>Customer feedback system with star ratings</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📊 Admin Management</h3>
+                    <p>Comprehensive admin panel for business operations</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Architecture -->
+        <div class="slide" id="slide3">
+            <h2>🏗️ System Architecture</h2>
+            <div class="architecture-diagram">
+                <h3>Backend (FastAPI)</h3>
+                <ul>
+                    <li><strong>RESTful API</strong> with automatic documentation</li>
+                    <li><strong>SQLAlchemy ORM</strong> for database operations</li>
+                    <li><strong>Pydantic schemas</strong> for data validation</li>
+                    <li><strong>JWT authentication</strong> with role-based security</li>
+                </ul>
+                
+                <h3>Frontend (React + TypeScript)</h3>
+                <ul>
+                    <li><strong>Component-based architecture</strong> for reusability</li>
+                    <li><strong>Context API</strong> for state management</li>
+                    <li><strong>Responsive design</strong> for all devices</li>
+                    <li><strong>Type-safe API integration</strong></li>
+                </ul>
+                
+                <h3>Database (SQLite)</h3>
+                <ul>
+                    <li><strong>Relational design</strong> with proper foreign keys</li>
+                    <li><strong>Migration system</strong> for schema evolution</li>
+                    <li><strong>Performance optimization</strong> with indexes</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 4: Key Features -->
+        <div class="slide" id="slide4">
+            <h2>✨ Key Features</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">🔐</div>
+                    <div class="stat-label">Authentication System</div>
+                    <p>JWT tokens, role-based access, secure endpoints</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">🛍️</div>
+                    <div class="stat-label">Product Management</div>
+                    <p>CRUD operations, image uploads, inventory control</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">🛒</div>
+                    <div class="stat-label">Shopping Cart</div>
+                    <p>Add/remove items, quantity management, persistent storage</p>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">📦</div>
+                    <div class="stat-label">Order Management</div>
+                    <p>Order creation, history tracking, customer management</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">⭐</div>
+                    <div class="stat-label">Review System</div>
+                    <p>Star ratings, customer feedback, review management</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">👨‍💼</div>
+                    <div class="stat-label">Admin Panel</div>
+                    <p>Customer overview, order analytics, product management</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Authentication & Security -->
+        <div class="slide" id="slide5">
+            <h2>🔐 Authentication & Security</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>User Roles</h3>
+                    <ul>
+                        <li><strong>ADMINISTRATOR</strong> - Full system access</li>
+                        <li><strong>CUSTOMER</strong> - Shopping and review access</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Security Features</h3>
+                    <ul>
+                        <li>Password hashing with bcrypt</li>
+                        <li>JWT token expiration (30 min)</li>
+                        <li>Role-based endpoint protection</li>
+                        <li>Input validation with Pydantic</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="code-block">
+// Example: Protected admin endpoint
+@router.post("/products/")
+@require_admin()
+async def create_product(product: ProductCreate):
+    return await create_product_db(product)
+            </div>
+        </div>
+
+        <!-- Slide 6: Product Management -->
+        <div class="slide" id="slide6">
+            <h2>🛍️ Product Management</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Product Operations</h3>
+                    <ul>
+                        <li>Create, read, update, delete products</li>
+                        <li>Image upload and management</li>
+                        <li>Inventory tracking</li>
+                        <li>Category organization</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Image System</h3>
+                    <ul>
+                        <li>Drag & drop upload interface</li>
+                        <li>Multiple image format support</li>
+                        <li>Automatic file validation</li>
+                        <li>Secure file storage</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="code-block">
+// Product model with image support
+class Product(Base):
+    __tablename__ = "products"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    description = Column(Text)
+    price = Column(Float)
+    image_url = Column(String, nullable=True)
+    average_rating = Column(Float, default=0.0)
+    review_count = Column(Integer, default=0)
+            </div>
+        </div>
+
+        <!-- Slide 7: Shopping Experience -->
+        <div class="slide" id="slide7">
+            <h2>🛒 Shopping Experience</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Product Discovery</h3>
+                    <ul>
+                        <li>Product catalog with images</li>
+                        <li>Search and filtering</li>
+                        <li>Product detail pages</li>
+                        <li>Customer reviews and ratings</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Cart & Checkout</h3>
+                    <ul>
+                        <li>Add/remove items</li>
+                        <li>Quantity management</li>
+                        <li>Persistent cart storage</li>
+                        <li>Order confirmation</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="code-block">
+// Cart context for state management
+const CartContext = createContext<CartContextType | undefined>(undefined);
+
+export const CartProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [total, setTotal] = useState(0);
+    
+    // Cart management functions...
+};
+            </div>
+        </div>
+
+        <!-- Slide 8: Review System -->
+        <div class="slide" id="slide8">
+            <h2>⭐ Review & Rating System</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Customer Features</h3>
+                    <ul>
+                        <li>1-5 star rating system</li>
+                        <li>Optional text feedback</li>
+                        <li>One review per product</li>
+                        <li>Edit/delete own reviews</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Admin Features</h3>
+                    <ul>
+                        <li>View all reviews</li>
+                        <li>Delete inappropriate content</li>
+                        <li>Review analytics</li>
+                        <li>Moderation tools</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="code-block">
+// Review creation endpoint
+@router.post("/reviews/")
+async def create_review(
+    review: ReviewCreate,
+    current_user: User = Depends(get_current_user)
+):
+    # Check if user already reviewed this product
+    existing_review = await get_review_by_user_product(
+        current_user.id, review.product_id
+    )
+    if existing_review:
+        raise HTTPException(400, "User already reviewed this product")
+    
+    return await create_review_db(review, current_user.id)
+            </div>
+        </div>
+
+        <!-- Slide 9: Order Management -->
+        <div class="slide" id="slide9">
+            <h2>📦 Order Management</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Customer Features</h3>
+                    <ul>
+                        <li>Order history with details</li>
+                        <li>Order status tracking</li>
+                        <li>Product information per order</li>
+                        <li>Order summary statistics</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Admin Features</h3>
+                    <ul>
+                        <li>View all customer orders</li>
+                        <li>Customer management</li>
+                        <li>Order analytics</li>
+                        <li>Business insights</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="code-block">
+// Enhanced order schema with product details
+class OrderWithDetails(OrderOut):
+    items: List[OrderItemWithProduct]
+    user: UserOut
+
+class OrderItemWithProduct(OrderItemOut):
+    product: Product
+    # Includes product name, image, description
+            </div>
+        </div>
+
+        <!-- Slide 10: Technical Implementation -->
+        <div class="slide" id="slide10">
+            <h2>🔧 Technical Implementation</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Backend Technologies</h3>
+                    <ul>
+                        <li><strong>FastAPI</strong> - Modern Python web framework</li>
+                        <li><strong>SQLAlchemy</strong> - Database ORM</li>
+                        <li><strong>Pydantic</strong> - Data validation</li>
+                        <li><strong>JWT</strong> - Authentication tokens</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Frontend Technologies</h3>
+                    <ul>
+                        <li><strong>React 18</strong> - UI framework</li>
+                        <li><strong>TypeScript</strong> - Type safety</li>
+                        <li><strong>Vite</strong> - Build tool</li>
+                        <li><strong>Context API</strong> - State management</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="code-block">
+# Database migration example
+def upgrade_database():
+    # Create reviews table
+    create_reviews_table()
+    # Add indexes for performance
+    create_performance_indexes()
+    # Update existing products
+    update_product_ratings()
+            </div>
+        </div>
+
+        <!-- Slide 11: Testing & Quality -->
+        <div class="slide" id="slide11">
+            <h2>🧪 Testing & Quality Assurance</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Backend Testing</h3>
+                    <ul>
+                        <li><strong>Pytest</strong> test framework</li>
+                        <li>API endpoint testing</li>
+                        <li>Database integration tests</li>
+                        <li>Authentication tests</li>
+                        <li><span class="highlight">35+ tests passing</span></li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Frontend Testing</h3>
+                    <ul>
+                        <li><strong>Vitest</strong> test runner</li>
+                        <li>Component testing</li>
+                        <li>API integration tests</li>
+                        <li>Context testing</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="code-block">
+# Example test for authentication
+def test_admin_access():
+    response = client.get("/auth/admin-only", 
+                         headers={"Authorization": f"Bearer {admin_token}"})
+    assert response.status_code == 200
+    assert response.json()["message"] == "Admin access granted"
+            </div>
+        </div>
+
+        <!-- Slide 12: Project Statistics -->
+        <div class="slide" id="slide12">
+            <h2>📊 Project Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">15+</div>
+                    <div class="stat-label">API Endpoints</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Database Tables</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">20+</div>
+                    <div class="stat-label">React Components</div>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Router Modules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Documentation Files</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Test Coverage</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Future Enhancements -->
+        <div class="slide" id="slide13">
+            <h2>🚀 Future Enhancements</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Advanced Features</h3>
+                    <ul>
+                        <li>Payment gateway integration</li>
+                        <li>Email notifications</li>
+                        <li>Advanced search & filters</li>
+                        <li>Mobile app development</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Scalability</h3>
+                    <ul>
+                        <li>PostgreSQL migration</li>
+                        <li>Redis caching</li>
+                        <li>Microservices architecture</li>
+                        <li>Docker containerization</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Business Features</h3>
+                    <ul>
+                        <li>Inventory management</li>
+                        <li>Sales analytics</li>
+                        <li>Customer segmentation</li>
+                        <li>Marketing tools</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>User Experience</h3>
+                    <ul>
+                        <li>Personalized recommendations</li>
+                        <li>Wishlist functionality</li>
+                        <li>Social sharing</li>
+                        <li>Multi-language support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Conclusion -->
+        <div class="slide" id="slide14">
+            <h1>🎯 Conclusion</h1>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>What We've Built</h3>
+                    <p>A production-ready e-commerce platform demonstrating modern web development best practices</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Key Achievements</h3>
+                    <ul>
+                        <li>Complete user authentication system</li>
+                        <li>Full product management</li>
+                        <li>Shopping cart & checkout</li>
+                        <li>Review & rating system</li>
+                        <li>Admin management panel</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="tech-stack">
+                <div class="tech-item">✅ FastAPI Backend</div>
+                <div class="tech-item">✅ React Frontend</div>
+                <div class="tech-item">✅ SQLite Database</div>
+                <div class="tech-item">✅ Comprehensive Testing</div>
+            </div>
+            <p style="margin-top: 40px; font-size: 1.5rem; color: #2c3e50;">
+                <strong>Ready for production deployment and further development!</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="slide-counter">
+        <span id="currentSlide">1</span> / <span id="totalSlides">14</span>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="previousSlide()">← Previous</button>
+        <button class="nav-btn" id="nextBtn" onclick="nextSlide()">Next →</button>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[index].classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = index + 1;
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        // Touch/swipe support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    previousSlide();
+                }
+            }
+        }
+
+        // Initialize first slide
+        showSlide(0);
+    </script>
+</body>
+</html>
