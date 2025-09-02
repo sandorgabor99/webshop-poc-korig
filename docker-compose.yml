@@ -1,0 +1,75 @@
+services:
+  # Backend service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webshop-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./webshop.db
+      - SECRET_KEY=your-secret-key-here
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+    volumes:
+      - ./uploads:/app/uploads
+      - ./webshop.db:/app/webshop.db
+    networks:
+      - webshop-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: webshop-frontend
+    ports:
+      - "80:80"
+    networks:
+      - webshop-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Database service (for production - using PostgreSQL)
+  # Uncomment when migrating from SQLite
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: webshop-postgres
+  #   environment:
+  #     - POSTGRES_DB=webshop
+  #     - POSTGRES_USER=webshop_user
+  #     - POSTGRES_PASSWORD=webshop_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - webshop-network
+
+  # Redis service (for caching and sessions)
+  # Uncomment when implementing caching
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: webshop-redis
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - webshop-network
+
+networks:
+  webshop-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:

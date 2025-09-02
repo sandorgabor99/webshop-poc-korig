@@ -85,3 +85,7 @@ app.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
 @app.get("/")
 def root():
 	return {"message": "Webshop API running"}
+
+@app.get("/health")
+def health_check():
+	return {"status": "healthy", "timestamp": "2024-01-01T00:00:00Z"}
