@@ -5,6 +5,17 @@ on:
     branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+        - build-only
 
 env:
   REGISTRY: ghcr.io
@@ -104,12 +115,11 @@ jobs:
         github-pr-comment: true
 
   # Build and push Docker images
-  # This job runs when pushing to main or dev branches
-  # Images are pushed to GitHub Container Registry (ghcr.io)
+  # This job runs manually via workflow dispatch
   build-and-push:
     needs: [test-backend, test-frontend, security-scan]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    if: github.event_name == 'workflow_dispatch'
     
     permissions:
       contents: read
@@ -166,6 +176,7 @@ jobs:
 
   # Deploy to staging
   deploy-staging:
+    needs: [test-backend, test-frontend, security-scan, build-and-push]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
     
@@ -179,6 +190,7 @@ jobs:
 
   # Deploy to production
   deploy-production:
+    needs: [test-backend, test-frontend, security-scan, build-and-push]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
