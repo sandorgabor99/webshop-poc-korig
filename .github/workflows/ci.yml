@@ -18,6 +18,9 @@ jobs:
       matrix:
         python-version: [3.11, 3.12]
     
+    permissions:
+      contents: read
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -47,6 +50,9 @@ jobs:
   # Test Frontend
   test-frontend:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
     
     steps:
     - name: Checkout code
@@ -78,6 +84,10 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     
+    permissions:
+      contents: read
+      security-events: write
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -91,7 +101,7 @@ jobs:
         output: 'trivy-results.sarif'
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
