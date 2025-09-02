@@ -170,7 +170,9 @@ describe('API Client', () => {
         'http://test-api.com/orders/',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ items: [{ product_id: 1, quantity: 2 }] })
+          body: JSON.stringify({ 
+            items: [{ id: 0, product_id: 1, quantity: 2, unit_price: 14.99 }] 
+          })
         })
       )
     })
