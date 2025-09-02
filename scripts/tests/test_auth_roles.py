@@ -5,6 +5,7 @@ Test script to verify authentication and role-based system
 import requests
 import json
 from typing import Dict, Any
+import time
 
 BASE_URL = "http://localhost:8000"
 
@@ -109,21 +110,26 @@ def test_products_admin(token: str) -> Dict[str, Any]:
 def main():
     print("=== Testing Authentication and Role System ===\n")
     
-    # Test 1: Register a customer
-    print("1. Testing customer registration...")
-    customer_data = test_register_user("customer@test.com", "password123", "CUSTOMER")
+    # Generate unique timestamps for test data
+    timestamp = int(time.time())
     
-    # Test 2: Register an administrator
+    # Test 1: Register a customer with unique email
+    print("1. Testing customer registration...")
+    customer_email = f"customer{timestamp}@test.com"
+    customer_data = test_register_user(customer_email, "password123", "CUSTOMER")
+    
+    # Test 2: Register an administrator with unique email
     print("\n2. Testing administrator registration...")
-    admin_data = test_register_user("admin@test.com", "password123", "ADMINISTRATOR")
+    admin_email = f"admin{timestamp}@test.com"
+    admin_data = test_register_user(admin_email, "password123", "ADMINISTRATOR")
     
     # Test 3: Login as customer
     print("\n3. Testing customer login...")
-    customer_token = test_login("customer@test.com", "password123")
+    customer_token = test_login(customer_email, "password123")
     
     # Test 4: Login as administrator
     print("\n4. Testing administrator login...")
-    admin_token = test_login("admin@test.com", "password123")
+    admin_token = test_login(admin_email, "password123")
     
     # Test 5: Test /me endpoint with customer
     print("\n5. Testing /me endpoint with customer...")
