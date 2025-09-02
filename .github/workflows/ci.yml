@@ -104,10 +104,12 @@ jobs:
         github-pr-comment: true
 
   # Build and push Docker images
+  # This job runs when pushing to main or dev branches
+  # Images are pushed to GitHub Container Registry (ghcr.io)
   build-and-push:
     needs: [test-backend, test-frontend, security-scan]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     
     permissions:
       contents: read
@@ -164,7 +166,6 @@ jobs:
 
   # Deploy to staging
   deploy-staging:
-    needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
     
@@ -178,7 +179,6 @@ jobs:
 
   # Deploy to production
   deploy-production:
-    needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
