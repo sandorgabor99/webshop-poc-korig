@@ -3,26 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, dev ]
-    paths:
-      - 'Dockerfile'
-      - 'frontend/Dockerfile'
-      - 'docker-compose*.yml'
-      - 'app/**'
-      - 'frontend/**'
-      - 'requirements*.txt'
-      - 'package.json'
-      - 'frontend/package.json'
   pull_request:
     branches: [ main, dev ]
-    paths:
-      - 'Dockerfile'
-      - 'frontend/Dockerfile'
-      - 'docker-compose*.yml'
-      - 'app/**'
-      - 'frontend/**'
-      - 'requirements*.txt'
-      - 'package.json'
-      - 'frontend/package.json'
   workflow_dispatch:
     inputs:
       environment:
