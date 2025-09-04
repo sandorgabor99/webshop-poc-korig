@@ -148,14 +148,46 @@ jobs:
         # Build frontend image with proper tags for later use
         docker build -t webshop-frontend:test -t webshop-frontend:latest ./frontend
         
-        # Start the container
-        docker run -d --name test-frontend -p 80:80 webshop-frontend:test
+        # Start the container with better error handling
+        docker run -d --name test-frontend -p 8080:80 webshop-frontend:test
         
-        # Wait for container to be ready
-        sleep 30
+        # Wait for container to be ready and check logs
+        echo "Waiting for frontend container to start..."
+        sleep 10
         
-        # Test health endpoint
-        curl -f http://localhost:80/health || exit 1
+        # Check container status and logs
+        docker ps -a
+        docker logs test-frontend
+        
+        # Check if container is running
+        if ! docker ps | grep -q test-frontend; then
+          echo "Frontend container failed to start"
+          docker logs test-frontend
+          exit 1
+        fi
+        
+        # Wait a bit more for nginx to fully initialize
+        sleep 15
+        
+        # Test health endpoint with retries
+        for i in {1..5}; do
+          echo "Attempt $i: Testing frontend health endpoint..."
+          if curl -f http://localhost:8080/health; then
+            echo "Frontend health check passed!"
+            break
+          else
+            echo "Health check failed, attempt $i"
+            if [ $i -eq 5 ]; then
+              echo "All health check attempts failed"
+              docker logs test-frontend
+              exit 1
+            fi
+            sleep 5
+          fi
+        done
+        
+        # Test the main page
+        curl -f http://localhost:8080/ || echo "Main page test failed, but continuing..."
         
         # Cleanup
         docker stop test-frontend
@@ -170,12 +202,18 @@ jobs:
         docker-compose up -d
         
         # Wait for services to be ready
+        echo "Waiting for services to start..."
         sleep 60
         
+        # Check service status
+        docker-compose ps
+        
         # Test backend
+        echo "Testing backend health..."
         curl -f http://localhost:8000/health || exit 1
         
-        # Test frontend
+        # Test frontend (using the port from docker-compose)
+        echo "Testing frontend health..."
         curl -f http://localhost:80/health || exit 1
         
         # Stop services

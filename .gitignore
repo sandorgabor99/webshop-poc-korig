@@ -90,4 +90,14 @@ coverage.xml
 *.tmp
 *.temp
 
+# Converted documentation files
+converted_docs/
+converted_docs/**
+*.pdf
+*.docx
+*.html
+
+convert_all_formats.py
+converted_docs
+convert_to_pdf.bat
 
