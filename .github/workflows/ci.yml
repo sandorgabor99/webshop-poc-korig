@@ -189,6 +189,10 @@ jobs:
         # Test the main page
         curl -f http://localhost:8080/ || echo "Main page test failed, but continuing..."
         
+        # Test API endpoint (should return 502 since backend isn't running)
+        echo "Testing API endpoint (expected: 502 since backend isn't running)..."
+        curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/health || echo "API test completed"
+        
         # Cleanup
         docker stop test-frontend
         docker rm test-frontend
