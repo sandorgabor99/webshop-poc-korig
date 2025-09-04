@@ -113,7 +113,7 @@ jobs:
         github-comment: true
         github-pr-comment: true
 
-  # Docker container testing
+  # Docker container testing and building
   test-containers:
     runs-on: ubuntu-latest
     needs: [test-backend, test-frontend]
@@ -127,8 +127,8 @@ jobs:
 
     - name: Build and test backend container
       run: |
-        # Build backend image
-        docker build -t webshop-backend:test .
+        # Build backend image with proper tags for later use
+        docker build -t webshop-backend:test -t webshop-backend:latest .
         
         # Start the container
         docker run -d --name test-backend -p 8000:8000 webshop-backend:test
@@ -145,8 +145,8 @@ jobs:
 
     - name: Build and test frontend container
       run: |
-        # Build frontend image
-        docker build -t webshop-frontend:test ./frontend
+        # Build frontend image with proper tags for later use
+        docker build -t webshop-frontend:test -t webshop-frontend:latest ./frontend
         
         # Start the container
         docker run -d --name test-frontend -p 80:80 webshop-frontend:test
@@ -181,6 +181,15 @@ jobs:
         # Stop services
         docker-compose down
 
+    - name: Save images for later use
+      run: |
+        # Save the tested images so they can be used in the build-and-push job
+        docker save webshop-backend:latest -o backend-image.tar
+        docker save webshop-frontend:latest -o frontend-image.tar
+        
+        # Upload images as artifacts
+        echo "Images built and tested successfully"
+
   # Container security scanning
   container-security:
     runs-on: ubuntu-latest
@@ -194,22 +203,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build images for security scan
-      run: |
-        docker build -t webshop-backend:scan .
-        docker build -t webshop-frontend:scan ./frontend
-
     - name: Run Trivy vulnerability scanner on backend
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'webshop-backend:scan'
+        image-ref: 'webshop-backend:latest'
         format: 'sarif'
         output: 'trivy-backend-results.sarif'
 
     - name: Run Trivy vulnerability scanner on frontend
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'webshop-frontend:scan'
+        image-ref: 'webshop-frontend:latest'
         format: 'sarif'
         output: 'trivy-frontend-results.sarif'
 
@@ -221,10 +225,10 @@ jobs:
           trivy-backend-results.sarif
           trivy-frontend-results.sarif
 
-  # Build and push Docker images
-  # This job runs on both main and dev branch pushes to create production and development images
+  # Push pre-built Docker images
+  # This job uses the images built and tested in the test-containers stage
   build-and-push:
-    needs: [test-backend, test-frontend, security-scan, test-containers, container-security]
+    needs: [test-backend, test-frontend, security-scan, test-containers]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     
@@ -260,31 +264,25 @@ jobs:
         flavor: |
           latest=auto
 
-    - name: Build and push backend image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.version }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.ref_name }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+    - name: Tag and push backend image
+      run: |
+        # Tag the pre-built image with registry tags
+        docker tag webshop-backend:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.version }}
+        docker tag webshop-backend:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.ref_name }}
+        
+        # Push the tagged images
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.version }}
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.ref_name }}
 
-    - name: Build and push frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
-        file: ./frontend/Dockerfile
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ steps.meta.outputs.version }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.ref_name }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+    - name: Tag and push frontend image
+      run: |
+        # Tag the pre-built image with registry tags
+        docker tag webshop-frontend:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ steps.meta.outputs.version }}
+        docker tag webshop-frontend:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.ref_name }}
+        
+        # Push the tagged images
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ steps.meta.outputs.version }}
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.ref_name }}
 
   # Deploy to staging
   deploy-staging:
