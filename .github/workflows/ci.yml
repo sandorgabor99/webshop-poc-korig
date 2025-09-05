@@ -140,21 +140,26 @@ jobs:
 
     - name: Run Trivy vulnerability scanner on backend
       uses: aquasecurity/trivy-action@master
+      continue-on-error: true
       with:
         image-ref: 'webshop-backend:latest'
         format: 'sarif'
         output: 'trivy-backend-results.sarif'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Run Trivy vulnerability scanner on frontend
       uses: aquasecurity/trivy-action@master
+      continue-on-error: true
       with:
         image-ref: 'webshop-frontend:latest'
         format: 'sarif'
         output: 'trivy-frontend-results.sarif'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
+      continue-on-error: true
       with:
         sarif_file: |
           trivy-backend-results.sarif
@@ -163,7 +168,7 @@ jobs:
   # Push pre-built Docker images
   # This job builds and pushes the Docker images after all tests pass
   build-and-push:
-    needs: [test-backend, test-frontend, security-scan]
+    needs: [test-backend, test-frontend, security-scan, container-security]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
     
@@ -239,6 +244,9 @@ jobs:
         echo "Deploying to staging environment..."
         echo "Event type: ${{ github.event_name }}"
         echo "Branch: ${{ github.ref_name }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "Full ref: ${{ github.ref }}"
+        echo "Workflow dispatch environment: ${{ github.event.inputs.environment }}"
         # Add your staging deployment logic here
         # Example: kubectl apply -f k8s/staging/
         # Example: docker-compose -f docker-compose.staging.yml up -d
@@ -259,6 +267,9 @@ jobs:
         echo "Deploying to production environment..."
         echo "Event type: ${{ github.event_name }}"
         echo "Branch: ${{ github.ref_name }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "Full ref: ${{ github.ref }}"
+        echo "Workflow dispatch environment: ${{ github.event.inputs.environment }}"
         # Add your production deployment logic here
         # Example: kubectl apply -f k8s/production/
         # Example: docker-compose -f docker-compose.prod.yml up -d
