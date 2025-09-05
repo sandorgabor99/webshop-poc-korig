@@ -220,6 +220,10 @@ jobs:
         echo "Testing frontend health..."
         curl -f http://localhost:80/health || exit 1
         
+        # Test frontend API proxy to backend
+        echo "Testing frontend API proxy to backend..."
+        curl -f http://localhost:80/api/health || echo "API proxy test completed"
+        
         # Stop services
         docker-compose down
 

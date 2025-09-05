@@ -25,8 +25,13 @@ RUN apk add --no-cache curl
 # Copy built application
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration
+# Copy nginx configurations and startup script
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx.prod.conf /etc/nginx/nginx.prod.conf
+COPY start-nginx.sh /start-nginx.sh
+
+# Make startup script executable
+RUN chmod +x /start-nginx.sh
 
 # Create nginx pid directory and ensure proper permissions
 RUN mkdir -p /var/run/nginx /var/cache/nginx /var/log/nginx
@@ -38,5 +43,5 @@ EXPOSE 80
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
     CMD curl -f http://localhost:80/health || exit 1
 
-# Start nginx with proper signal handling
-CMD ["nginx", "-g", "daemon off;"]
+# Start nginx using the startup script
+CMD ["/start-nginx.sh"]
