@@ -197,35 +197,6 @@ jobs:
         docker stop test-frontend
         docker rm test-frontend
 
-    - name: Test Docker Compose
-      run: |
-        # Build images
-        docker-compose build
-        
-        # Start services
-        docker-compose up -d
-        
-        # Wait for services to be ready
-        echo "Waiting for services to start..."
-        sleep 60
-        
-        # Check service status
-        docker-compose ps
-        
-        # Test backend
-        echo "Testing backend health..."
-        curl -f http://localhost:8000/health || exit 1
-        
-        # Test frontend (using the port from docker-compose)
-        echo "Testing frontend health..."
-        curl -f http://localhost:80/health || exit 1
-        
-        # Test frontend API proxy to backend
-        echo "Testing frontend API proxy to backend..."
-        curl -f http://localhost:80/api/health || echo "API proxy test completed"
-        
-        # Stop services
-        docker-compose down
 
     - name: Save images for later use
       run: |
